@@ -1,1110 +1,872 @@
-# Python `argparse` --- Detailed Notes
+# Python `argparse` — Basic Command-Line Arguments
+### video Link: https://www.youtube.com/watch?v=FbEJN8FsJ9U
 
 ## 1. What is `argparse`?
 
-`argparse` is a Python standard-library module used to build programs
-that accept command-line arguments and flags.
+If you have Python scripts that need some input from the user, or where you want to change a value to get a different result, `argparse` is a useful way to handle that input.
 
-Example:
+`argparse` is a Python standard-library module used to add **positional arguments** and **optional arguments/flags** to programs that are executed from the command line.
 
-``` bash
-python program.py input.txt
+Instead of changing variables inside the Python file every time, you can pass the values when running the program.
+
+### Example
+
+Instead of:
+
+```python
+team = input("Enter team: ")
 ```
 
-or:
+you can run:
 
-``` bash
-python program.py --copy 5 input.txt
+```bash
+python workingfile.py arsenal
 ```
 
-This is especially useful for DevOps automation because the same script
-can receive different values from Jenkins, GitLab CI, shell scripts,
-cron, etc.
+The value `arsenal` is passed to the program as a command-line argument.
 
-------------------------------------------------------------------------
+---
 
-## 2. Basic structure
+## 2. Why use command-line arguments?
 
-``` python
-import argparse
+A simple `input()` approach works:
 
-parser = argparse.ArgumentParser(
-    description="A program that processes files"
-)
-
-parser.add_argument("file_name")
-
-args = parser.parse_args()
-
-print(args.file_name)
+```python
+team = input("Enter team: ")
 ```
 
-Run:
+But it requires the program to stop and wait for input.
 
-``` bash
-python program.py file.txt
-```
+For scripts that you repeatedly run yourself, or scripts used by other people or automation systems, command-line arguments are usually more convenient.
 
-Output:
+For example:
 
-``` text
-file.txt
-```
-
-The normal flow is:
-
-``` text
-Create parser
-    ↓
-Add arguments
-    ↓
-Parse command-line arguments
-    ↓
-Use values in the program
-```
-
-------------------------------------------------------------------------
-
-## 3. `ArgumentParser()`
-
-Create the parser:
-
-``` python
-parser = argparse.ArgumentParser()
-```
-
-Add a description:
-
-``` python
-parser = argparse.ArgumentParser(
-    description="A program that processes files"
-)
-```
-
-`argparse` automatically provides `-h` and `--help` unless help has been
-disabled.
-
-``` bash
-python program.py --help
-```
-
-------------------------------------------------------------------------
-
-## 4. `add_argument()`
-
-Arguments are defined with:
-
-``` python
-parser.add_argument(...)
-```
-
-Example:
-
-``` python
-parser.add_argument(
-    "file_name",
-    help="Name of the file to process"
-)
+```bash
+python workingfile.py arsenal
 ```
 
 Then:
 
-``` bash
-python program.py file.txt
+```bash
+python workingfile.py chelsea
 ```
 
-and:
+You can run the same script with different values without changing the source code.
 
-``` python
-args.file_name
+This style is also common in Linux command-line programs.
+
+---
+
+# 3. Positional vs Optional Arguments
+
+Command-line arguments are commonly divided into two types.
+
+## Positional argument
+
+A positional argument is normally required and is supplied without `-` or `--`.
+
+Example:
+
+```bash
+python workingfile.py arsenal
+```
+
+Here:
+
+```text
+arsenal
+```
+
+is the positional argument.
+
+The program needs it because it cannot search for a team's stadium without knowing which team to search for.
+
+## Optional argument
+
+Optional arguments normally use a short or long flag:
+
+```bash
+-c 5
+```
+
+or:
+
+```bash
+--copy 5
+```
+
+The user can choose whether to provide them.
+
+### Simple comparison
+
+```text
+Positional argument:
+python program.py arsenal
+
+Optional argument:
+python program.py --team arsenal
+```
+
+---
+
+# 4. Example Without `argparse`
+
+The original example uses `requests`, `json`, and `input()`:
+
+```python
+import requests
+import json
+
+team = input("Enter team: ")
+
+url = "https://www.thesportsdb.com/api/v1/json/1/searchteams.php?t=" + team
+
+r = requests.get(url)
+
+data = json.loads(r.text)
+
+print(data["teams"][0]["strStadium"])
+```
+
+The program waits for:
+
+```text
+Enter team:
+```
+
+and the user types a team.
+
+For example:
+
+```text
+arsenal
+```
+
+The API response is then used to print the stadium.
+
+---
+
+# 5. Why Replace `input()`?
+
+With `input()`:
+
+```python
+team = input("Enter team: ")
+```
+
+you have to interact with the program while it is running.
+
+With `argparse`, you can run:
+
+```bash
+python workingfile.py arsenal
+```
+
+This is cleaner for scripts that are repeatedly executed from a terminal or automation system.
+
+---
+
+# 6. Import `argparse`
+
+First:
+
+```python
+import argparse
+```
+
+`argparse` is part of Python's standard library.
+
+---
+
+# 7. Create the Argument Parser
+
+The first major step is creating an `ArgumentParser` object:
+
+```python
+parser = argparse.ArgumentParser(
+    description="finds the stadiums"
+)
+```
+
+The parser is responsible for:
+
+- defining the arguments
+- reading the command-line input
+- validating the arguments
+- creating the `args` object
+- generating help and error messages
+
+The `description` explains what the program does.
+
+---
+
+# 8. Add the Argument
+
+Next, define the argument:
+
+```python
+parser.add_argument(
+    "team",
+    metavar="team",
+    type=str,
+    help="enter your team"
+)
+```
+
+Let's understand each part.
+
+### `"team"`
+
+This is the name of the positional argument.
+
+```python
+"team"
+```
+
+Later, the value is accessed as:
+
+```python
+args.team
+```
+
+### `metavar="team"`
+
+`metavar` controls how the argument is displayed in the command-line help/usage information.
+
+For example:
+
+```text
+usage: workingfile.py [-h] team
+```
+
+### `type=str`
+
+This tells `argparse` that the expected value is a string.
+
+```python
+type=str
+```
+
+### `help="enter your team"`
+
+This provides a description that appears when the user requests help.
+
+For example:
+
+```bash
+python workingfile.py -h
+```
+
+---
+
+# 9. Parse the Arguments
+
+After defining the arguments:
+
+```python
+args = parser.parse_args()
+```
+
+This reads the arguments supplied when the program is executed.
+
+For example:
+
+```bash
+python workingfile.py arsenal
+```
+
+After parsing:
+
+```python
+args.team
 ```
 
 contains:
 
-``` text
-file.txt
+```text
+arsenal
 ```
 
-------------------------------------------------------------------------
+---
 
-# 5. Positional arguments
+# 10. Store the Argument in a Variable
 
-A positional argument does not start with `-` or `--`.
+The example then does:
 
-``` python
-parser.add_argument("file_name")
+```python
+team = args.team
 ```
 
-Run:
+Now the rest of the program can use the variable:
 
-``` bash
-python program.py file.txt
+```python
+team
 ```
 
-A positional argument is required by default.
+For example:
+
+```python
+url = "https://www.thesportsdb.com/api/v1/json/1/searchteams.php?t=" + team
+```
+
+---
+
+# 11. Complete Example
+
+The complete `argparse` version is:
+
+```python
+import requests
+import json
+import argparse
+
+parser = argparse.ArgumentParser(
+    description="finds the stadiums"
+)
+
+parser.add_argument(
+    "team",
+    metavar="team",
+    type=str,
+    help="enter your team"
+)
+
+args = parser.parse_args()
+
+team = args.team
+
+url = "https://www.thesportsdb.com/api/v1/json/1/searchteams.php?t=" + team
+
+r = requests.get(url)
+
+data = json.loads(r.text)
+
+print(data["teams"][0]["strStadium"])
+```
+
+Run it like:
+
+```bash
+python workingfile.py arsenal
+```
+
+The value:
+
+```text
+arsenal
+```
+
+flows through the program like this:
+
+```text
+Command line
+     │
+     │ arsenal
+     ▼
+argparse
+     │
+     ▼
+args.team
+     │
+     ▼
+team
+     │
+     ▼
+API URL
+     │
+     ▼
+requests.get()
+     │
+     ▼
+JSON response
+     │
+     ▼
+stadium
+```
+
+---
+
+# 12. What Happens If the Argument Is Missing?
+
+Because `team` is a positional argument:
+
+```python
+parser.add_argument("team")
+```
+
+it is required by default.
 
 If you run:
 
-``` bash
-python program.py
+```bash
+python workingfile.py
 ```
 
-`argparse` reports that `file_name` is required.
+`argparse` reports an error saying that the `team` argument is required.
 
-------------------------------------------------------------------------
+The usage information also shows:
 
-# 6. Optional arguments / flags
-
-An optional argument normally starts with `-` or `--`.
-
-``` python
-parser.add_argument(
-    "-c",
-    "--copy"
-)
+```text
+usage: workingfile.py [-h] team
 ```
 
-You can use:
+This is useful because the program tells the user exactly what is missing.
 
-``` bash
-python program.py --copy 5
+---
+
+# 13. Command-Line Help
+
+`argparse` automatically provides help.
+
+Run:
+
+```bash
+python workingfile.py -h
 ```
 
 or:
 
-``` bash
-python program.py -c 5
+```bash
+python workingfile.py --help
 ```
 
-It is good practice to provide a descriptive long name.
+The help output includes the program description and the argument information.
 
-------------------------------------------------------------------------
+Because we added:
 
-# 7. `parse_args()`
+```python
+help="enter your team"
+```
 
-This line reads the command-line input:
+the user gets a useful explanation of what should be supplied.
 
-``` python
+---
+
+# 14. Screenshot — Original `input()` Version
+
+The first screenshot shows the simple `input()` approach.
+
+![Python script using input() and API request](./images/argparse_basic_input_example.png)
+
+The important part is:
+
+```python
+team = input("enter team: ")
+```
+
+The program waits for the user to type the team.
+
+---
+
+# 15. Screenshot — `argparse` Version
+
+The second screenshot shows the same program converted to `argparse`.
+
+![Python script using argparse](./images/argparse_command_line_example.png)
+
+The important lines are:
+
+```python
+parser = argparse.ArgumentParser(
+    description="finds the stadiums"
+)
+
+parser.add_argument(
+    "team",
+    metavar="team",
+    type=str,
+    help="enter your team"
+)
+
+args = parser.parse_args()
+
+team = args.team
+```
+
+This replaces the interactive `input()` approach.
+
+---
+
+# 16. Running the Program
+
+Suppose the file is:
+
+```text
+workingfile.py
+```
+
+Run:
+
+```bash
+python workingfile.py arsenal
+```
+
+Or on systems where Python 3 is explicitly invoked:
+
+```bash
+python3 workingfile.py arsenal
+```
+
+The command-line structure is:
+
+```text
+python
+   ↓
+workingfile.py
+   ↓
+arsenal
+```
+
+Here:
+
+```text
+workingfile.py → Python program
+arsenal        → positional argument
+```
+
+---
+
+# 17. Running It With Another Team
+
+You can reuse the same script:
+
+```bash
+python workingfile.py arsenal
+```
+
+Then:
+
+```bash
+python workingfile.py chelsea
+```
+
+Then:
+
+```bash
+python workingfile.py liverpool
+```
+
+The Python source code does not need to change.
+
+Only the command-line argument changes.
+
+---
+
+# 18. Why This Is Useful in DevOps
+
+This same concept is heavily used in DevOps scripts.
+
+For example:
+
+```bash
+python deploy.py dev
+```
+
+or:
+
+```bash
+python deploy.py prod
+```
+
+The Python program can use the argument to determine which environment to work with.
+
+A more advanced command could be:
+
+```bash
+python deploy.py \
+    --environment dev \
+    --version 1.2.3
+```
+
+This allows CI/CD systems to pass values into Python scripts.
+
+For example:
+
+```text
+Jenkins
+   ↓
+Python script
+   ↓
+argparse
+   ↓
+environment / version / other parameters
+   ↓
+automation
+```
+
+---
+
+# 19. Positional Argument in the Example
+
+The example has:
+
+```python
+parser.add_argument("team")
+```
+
+Because there is no `-` or `--`, it is a positional argument.
+
+Therefore:
+
+```bash
+python workingfile.py arsenal
+```
+
+is valid.
+
+But:
+
+```bash
+python workingfile.py
+```
+
+is not valid because `team` is required.
+
+---
+
+# 20. How Optional Arguments Are Different
+
+The video briefly mentions that optional arguments use dashes.
+
+For example:
+
+```python
+parser.add_argument(
+    "-t",
+    "--team",
+    type=str,
+    help="enter your team"
+)
+```
+
+Now the user could run:
+
+```bash
+python workingfile.py --team arsenal
+```
+
+or:
+
+```bash
+python workingfile.py -t arsenal
+```
+
+Unlike the positional version, this is an optional-style argument.
+
+---
+
+# 21. Important Syntax to Remember
+
+Basic parser:
+
+```python
+parser = argparse.ArgumentParser(
+    description="Program description"
+)
+```
+
+Add an argument:
+
+```python
+parser.add_argument(
+    "argument_name",
+    metavar="argument_name",
+    type=str,
+    help="Description"
+)
+```
+
+Parse:
+
+```python
 args = parser.parse_args()
 ```
 
-If the command is:
+Access:
 
-``` bash
-python program.py --copy 5
+```python
+args.argument_name
 ```
 
-then:
+---
 
-``` python
-args.copy
-```
-
-contains the supplied value.
-
-------------------------------------------------------------------------
-
-# 8. `help`
-
-Use `help=` to describe an argument:
-
-``` python
-parser.add_argument(
-    "file_name",
-    help="Name of the file to process"
-)
-```
-
-Then:
-
-``` bash
-python program.py -h
-```
-
-shows the description automatically.
-
-Good help text is important for CLI tools.
-
-------------------------------------------------------------------------
-
-# 9. `action="store"`
-
-`store` is the default action for a normal option.
-
-``` python
-parser.add_argument(
-    "-c",
-    "--copy",
-    action="store"
-)
-```
-
-You normally don't need to write `action="store"` explicitly.
-
-It expects a value:
-
-``` bash
-python program.py --copy 5
-```
-
-------------------------------------------------------------------------
-
-# 10. `metavar`
-
-`metavar` controls the name shown for the expected value in help output.
-
-``` python
-parser.add_argument(
-    "-c",
-    "--copy",
-    metavar="N",
-    help="Make N copies"
-)
-```
-
-The help message can show:
-
-``` text
--c N, --copy N    Make N copies
-```
-
-`metavar` does not change the Python attribute name.
-
-You still use:
-
-``` python
-args.copy
-```
-
-------------------------------------------------------------------------
-
-# 11. `store_const`
-
-`store_const` stores a predefined constant when the flag is supplied.
-
-``` python
-parser.add_argument(
-    "-s",
-    "--something",
-    action="store_const",
-    const=15
-)
-```
-
-Run:
-
-``` bash
-python program.py --something
-```
-
-Then:
-
-``` python
-args.something
-```
-
-is:
-
-``` text
-15
-```
-
-No value is required after the flag.
-
-------------------------------------------------------------------------
-
-# 12. `store_true`
-
-Use `store_true` for boolean flags.
-
-``` python
-parser.add_argument(
-    "--verbose",
-    action="store_true"
-)
-```
-
-With:
-
-``` bash
-python program.py --verbose
-```
-
-you get:
-
-``` python
-args.verbose == True
-```
-
-Without the flag:
-
-``` python
-args.verbose == False
-```
-
-Common examples:
-
-``` text
---verbose
---debug
---dry-run
---force
-```
-
-------------------------------------------------------------------------
-
-# 13. `store_false`
-
-`store_false` provides the opposite boolean behavior.
-
-Example:
-
-``` python
-parser.add_argument(
-    "--disable-cache",
-    action="store_false"
-)
-```
-
-Use it when the presence of an option should set a value to `False`.
-
-------------------------------------------------------------------------
-
-# 14. `dest`
-
-Normally:
-
-``` python
-parser.add_argument("-c", "--copy")
-```
-
-creates:
-
-``` python
-args.copy
-```
-
-You can change the Python attribute name:
-
-``` python
-parser.add_argument(
-    "-c",
-    "--copy",
-    dest="number_of_copies"
-)
-```
-
-Now:
-
-``` python
-args.number_of_copies
-```
-
-contains the value.
-
-`dest` changes the Python attribute name, not the CLI option.
-
-------------------------------------------------------------------------
-
-# 15. `action="version"`
-
-You can provide a program version:
-
-``` python
-parser.add_argument(
-    "-v",
-    "--version",
-    action="version",
-    version="program.py 1.0"
-)
-```
-
-Then:
-
-``` bash
-python program.py --version
-```
-
-prints:
-
-``` text
-program.py 1.0
-```
-
-------------------------------------------------------------------------
-
-# 16. `type`
-
-Command-line values are normally read as strings.
-
-``` python
-parser.add_argument("--copy")
-```
-
-means that:
-
-``` bash
-python program.py --copy 5
-```
-
-initially gives:
-
-``` python
-args.copy == "5"
-```
-
-Use `type=int` to convert and validate:
-
-``` python
-parser.add_argument(
-    "--copy",
-    type=int
-)
-```
-
-Now:
-
-``` python
-args.copy
-```
-
-is an integer.
-
-If the user enters:
-
-``` bash
-python program.py --copy hello
-```
-
-`argparse` reports an invalid integer.
-
-Common types:
-
-``` python
-type=str
-type=int
-type=float
-```
-
-A callable can also be used for custom conversion.
-
-------------------------------------------------------------------------
-
-# 17. `default`
-
-Use `default=` when an argument should have a value if the user does not
-provide it.
-
-``` python
-parser.add_argument(
-    "--workers",
-    type=int,
-    default=5
-)
-```
-
-Then:
-
-``` bash
-python program.py
-```
-
-gives:
-
-``` python
-args.workers == 5
-```
-
-while:
-
-``` bash
-python program.py --workers 10
-```
-
-gives:
-
-``` python
-args.workers == 10
-```
-
-------------------------------------------------------------------------
-
-# 18. `required=True`
-
-An optional argument can be made mandatory:
-
-``` python
-parser.add_argument(
-    "--project",
-    required=True
-)
-```
-
-Then the user must provide it.
-
-Use this carefully because options are normally intended to be optional.
-
-------------------------------------------------------------------------
-
-# 19. `choices`
-
-`choices` restricts allowed values.
-
-``` python
-parser.add_argument(
-    "--environment",
-    choices=["dev", "qs", "prod"]
-)
-```
-
-Valid:
-
-``` bash
-python program.py --environment dev
-```
-
-Invalid:
-
-``` bash
-python program.py --environment test
-```
-
-This is very useful in DevOps scripts.
-
-------------------------------------------------------------------------
-
-# 20. `nargs`
-
-`nargs` controls how many values an argument accepts.
-
-### Exactly two
-
-``` python
-parser.add_argument(
-    "files",
-    nargs=2
-)
-```
-
-Run:
-
-``` bash
-python program.py file1.txt file2.txt
-```
-
-Result:
-
-``` python
-args.files == ["file1.txt", "file2.txt"]
-```
-
-### `nargs="?"`
-
-Zero or one value:
-
-``` python
-parser.add_argument(
-    "file",
-    nargs="?",
-    default="default.txt"
-)
-```
-
-### `nargs="*"`
-
-Zero or more values:
-
-``` python
-parser.add_argument(
-    "files",
-    nargs="*"
-)
-```
-
-### `nargs="+"`
-
-One or more values:
-
-``` python
-parser.add_argument(
-    "files",
-    nargs="+"
-)
-```
-
-`+` requires at least one value.
-
-------------------------------------------------------------------------
-
-# 21. `action="append"`
-
-`append` allows the same option to be used multiple times:
-
-``` python
-parser.add_argument(
-    "--repo",
-    action="append"
-)
-```
-
-Run:
-
-``` bash
-python program.py \
-    --repo repo1 \
-    --repo repo2 \
-    --repo repo3
-```
-
-Result:
-
-``` python
-args.repo
-```
-
-is:
-
-``` python
-["repo1", "repo2", "repo3"]
-```
-
-Even one occurrence produces a list.
-
-------------------------------------------------------------------------
-
-# 22. `action="append_const"`
-
-`append_const` appends predefined constants to a list.
-
-``` python
-parser.add_argument(
-    "--one",
-    dest="values",
-    action="append_const",
-    const=1
-)
-
-parser.add_argument(
-    "--two",
-    dest="values",
-    action="append_const",
-    const=2
-)
-```
-
-Using:
-
-``` bash
-python program.py --one --two
-```
-
-can produce:
-
-``` python
-args.values == [1, 2]
-```
-
-Multiple options can contribute to the same destination.
-
-------------------------------------------------------------------------
-
-# 23. `action="count"`
-
-`count` counts how many times an option is supplied.
-
-``` python
-parser.add_argument(
-    "-v",
-    "--verbose",
-    action="count",
-    default=0
-)
-```
-
-Examples:
-
-``` bash
-python program.py
-```
-
-gives:
-
-``` text
-0
-```
-
-``` bash
-python program.py -v
-```
-
-gives:
-
-``` text
-1
-```
-
-``` bash
-python program.py -v -v -v
-```
-
-gives:
-
-``` text
-3
-```
-
-This is useful for verbosity levels.
-
-------------------------------------------------------------------------
-
-# 24. `action="extend"`
-
-`extend` is useful when each occurrence contributes multiple values to
-one flat list.
-
-``` python
-parser.add_argument(
-    "-n",
-    "--number",
-    action="extend",
-    nargs="+"
-)
-```
-
-Example:
-
-``` bash
-python program.py -n 3 4 -n 5 6
-```
-
-Result:
-
-``` python
-[3, 4, 5, 6]
-```
-
-Compare:
-
-``` text
-append  → keeps each occurrence as a separate item
-extend  → combines the values into one flat list
-```
-
-------------------------------------------------------------------------
-
-# 25. Hiding an argument from help
-
-You can hide an argument using:
-
-``` python
-help=argparse.SUPPRESS
-```
-
-Example:
-
-``` python
-parser.add_argument(
-    "--internal",
-    help=argparse.SUPPRESS
-)
-```
-
-The argument still works, but it normally won't appear in the generated
-help.
-
-Use this carefully because hidden options are harder for users to
-discover.
-
-------------------------------------------------------------------------
-
-# 26. Automatic help and errors
-
-One major benefit of `argparse` is automatic validation and help.
-
-``` bash
-python program.py --help
-```
-
-shows usage, descriptions, positional arguments, and options.
-
-`argparse` also reports errors for things such as:
-
--   missing required arguments
--   invalid integer values
--   invalid `choices`
--   incorrect numbers of values
--   unknown options
-
-This means you don't need to manually implement all basic CLI
-validation.
-
-------------------------------------------------------------------------
-
-# 27. Your Bitbucket Automation Script
+# 22. Basic `argparse` Mental Model
 
-Your Bitbucket script uses the same concepts:
+Remember these four steps:
 
-``` python
+```text
+1. Import
+       ↓
 import argparse
 
-my_parser = argparse.ArgumentParser()
+2. Create parser
+       ↓
+parser = argparse.ArgumentParser()
 
-my_parser.add_argument(
-    "-b",
-    "--branches",
-    action="store",
-    type=str,
-    required=True
-)
+3. Add arguments
+       ↓
+parser.add_argument(...)
 
-my_parser.add_argument(
-    "-m",
-    "--metaDataFile",
-    action="store",
-    type=str,
-    required=True
-)
-
-my_parser.add_argument(
-    "-u",
-    "--user",
-    action="store",
-    type=str,
-    required=True
-)
-
-my_parser.add_argument(
-    "-s",
-    "--secret",
-    action="store",
-    type=str,
-    required=True
-)
-
-args = my_parser.parse_args()
+4. Parse
+       ↓
+args = parser.parse_args()
 ```
 
-A command can conceptually look like:
+Then access the value:
 
-``` bash
-python script.py \
-    --branches "develop,ci_compliance" \
-    --metaDataFile metadata.json \
-    --user myuser \
-    --secret mytoken \
-    --project MYPROJECT \
-    --excludeRepos "repo1*,repo2*" \
-    --workersLimit 10 \
-    --outputFile output.json
+```python
+args.team
 ```
 
-The values are then available as:
+---
 
-``` python
-args.branches
-args.metaDataFile
-args.user
-args.secret
-args.project
-args.excludeRepos
-args.workersLimit
-args.outputFile
+# 23. `input()` vs `argparse`
+
+| `input()` | `argparse` |
+|---|---|
+| Program waits for user input | Input is supplied when starting the program |
+| Interactive | Command-line based |
+| Simple scripts | Better for reusable CLI tools |
+| User types after program starts | User provides values in the command |
+| Less convenient for automation | Convenient for automation |
+| No automatic CLI help/validation | Provides help and argument validation |
+
+For small interactive programs, `input()` can still be useful.
+
+For reusable command-line tools and automation scripts, `argparse` is often a better fit.
+
+---
+
+# 24. Key Takeaways
+
+### `argparse` is used to:
+
+- accept command-line arguments
+- accept positional arguments
+- accept optional arguments/flags
+- validate input
+- provide help messages
+- make scripts reusable
+- make scripts easier to use from automation
+
+### The most important code:
+
+```python
+import argparse
+
+parser = argparse.ArgumentParser(
+    description="finds the stadiums"
+)
+
+parser.add_argument(
+    "team",
+    metavar="team",
+    type=str,
+    help="enter your team"
+)
+
+args = parser.parse_args()
+
+team = args.team
 ```
 
-Understanding `argparse` explains an important part of that DevOps
-automation script.
+### Command:
 
-------------------------------------------------------------------------
-
-# 28. Recommended Learning Order
-
-Learn these in this order:
-
-``` text
-1. ArgumentParser()
-        ↓
-2. add_argument()
-        ↓
-3. parse_args()
-        ↓
-4. Positional arguments
-        ↓
-5. Optional arguments
-        ↓
-6. Short and long options
-        ↓
-7. help
-        ↓
-8. type
-        ↓
-9. default
-        ↓
-10. required
-        ↓
-11. store_true / store_false
-        ↓
-12. choices
-        ↓
-13. nargs
-        ↓
-14. dest
-        ↓
-15. append
-        ↓
-16. count
-        ↓
-17. extend
-        ↓
-18. store_const / append_const
+```bash
+python workingfile.py arsenal
 ```
 
-------------------------------------------------------------------------
+### Flow:
 
-# 29. Quick Cheat Sheet
+```text
+arsenal
+   ↓
+args.team
+   ↓
+team
+   ↓
+API URL
+   ↓
+requests.get()
+   ↓
+JSON
+   ↓
+stadium
+```
 
-  ---------------------------------------------------------------------------------
-  Feature                 Purpose                 Example
-  ----------------------- ----------------------- ---------------------------------
-  `ArgumentParser()`      Create parser           `argparse.ArgumentParser()`
+---
 
-  `add_argument()`        Add CLI argument        `parser.add_argument("--name")`
+# 25. Hands-On Practice
 
-  `parse_args()`          Read CLI input          `args = parser.parse_args()`
-
-  Positional              Required value          `"filename"`
-
-  `-x`                    Short option            `-v`
-
-  `--name`                Long option             `--version`
-
-  `help`                  Describe argument       `help="..."`
-
-  `type`                  Convert/validate        `type=int`
-
-  `default`               Default value           `default=10`
-
-  `required`              Make option mandatory   `required=True`
-
-  `store`                 Store supplied value    `action="store"`
-
-  `store_true`            Boolean flag            `--verbose`
-
-  `store_false`           Reverse boolean flag    `--disable-cache`
-
-  `store_const`           Store fixed value       `const=15`
-
-  `choices`               Restrict values         `choices=["dev","prod"]`
-
-  `nargs=2`               Exactly 2 values        `--files a b`
-
-  `nargs="?"`             Zero or one             optional value
-
-  `nargs="*"`             Zero or more            many values
-
-  `nargs="+"`             One or more             many required values
-
-  `dest`                  Change Python attribute `dest="output"`
-
-  `append`                Repeated option → list  `-f a -f b`
-
-  `append_const`          Append constants        repeated flags
-
-  `count`                 Count repeated option   `-vvv`
-
-  `extend`                Extend one flat list    `-n 1 2 -n 3 4`
-
-  `version`               Show program version    `--version`
-  ---------------------------------------------------------------------------------
-
-------------------------------------------------------------------------
-
-# 30. Practice Questions
-
-## Practice 1 --- Name
+## Practice 1 — Your Name
 
 Create:
 
-``` bash
-python program.py Ashraf
+```text
+hello.py
+```
+
+Run:
+
+```bash
+python hello.py Ashraf
 ```
 
 Expected:
 
-``` text
+```text
 Hello Ashraf
 ```
 
 ### Answer
 
-``` python
+```python
 import argparse
 
-parser = argparse.ArgumentParser()
-parser.add_argument("name")
+parser = argparse.ArgumentParser(
+    description="Print a greeting"
+)
+
+parser.add_argument(
+    "name",
+    type=str,
+    help="Enter your name"
+)
 
 args = parser.parse_args()
 
 print(f"Hello {args.name}")
 ```
 
-------------------------------------------------------------------------
+---
 
-## Practice 2 --- Integer
+## Practice 2 — Environment
 
-Accept:
+Create a script that accepts:
 
-``` bash
-python program.py --age 30
+```bash
+python deploy.py dev
 ```
 
 Expected:
 
-``` text
-You are 30 years old.
+```text
+Deploying to dev
 ```
 
 ### Answer
 
-``` python
+```python
 import argparse
 
-parser = argparse.ArgumentParser()
-
-parser.add_argument(
-    "--age",
-    type=int,
-    required=True
+parser = argparse.ArgumentParser(
+    description="Deployment script"
 )
 
-args = parser.parse_args()
-
-print(f"You are {args.age} years old.")
-```
-
-------------------------------------------------------------------------
-
-## Practice 3 --- DevOps Environment
-
-Allow only:
-
-``` text
-dev
-qs
-prod
-```
-
-### Answer
-
-``` python
-import argparse
-
-parser = argparse.ArgumentParser()
-
 parser.add_argument(
-    "-e",
-    "--environment",
-    choices=["dev", "qs", "prod"],
-    required=True
+    "environment",
+    type=str,
+    help="Deployment environment"
 )
 
 args = parser.parse_args()
@@ -1112,298 +874,137 @@ args = parser.parse_args()
 print(f"Deploying to {args.environment}")
 ```
 
-Test:
+Try:
 
-``` bash
-python deploy.py --environment test
+```bash
+python deploy.py dev
+python deploy.py qs
+python deploy.py prod
 ```
 
-It should fail.
+---
 
-------------------------------------------------------------------------
-
-## Practice 4 --- Boolean Flag
+## Practice 3 — Two Positional Arguments
 
 Create:
 
-``` bash
-python deploy.py --dry-run
+```bash
+python compare.py dev prod
 ```
 
 Expected:
 
-``` text
-Dry run enabled
-```
-
-Without the flag:
-
-``` text
-Real deployment
+```text
+Comparing dev with prod
 ```
 
 ### Answer
 
-``` python
+```python
 import argparse
 
-parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser(
+    description="Compare two environments"
+)
 
 parser.add_argument(
-    "--dry-run",
-    action="store_true"
+    "source",
+    type=str,
+    help="Source environment"
+)
+
+parser.add_argument(
+    "target",
+    type=str,
+    help="Target environment"
 )
 
 args = parser.parse_args()
 
-if args.dry_run:
-    print("Dry run enabled")
-else:
-    print("Real deployment")
+print(f"Comparing {args.source} with {args.target}")
 ```
 
-------------------------------------------------------------------------
+---
 
-## Practice 5 --- Default Workers
+## Practice 4 — Optional Argument
 
-Default workers should be `5`.
+Create a script that supports:
 
-``` bash
-python program.py
-```
-
-Output:
-
-``` text
-Workers: 5
-```
-
-But:
-
-``` bash
-python program.py --workers 10
-```
-
-should output:
-
-``` text
-Workers: 10
+```bash
+python deploy.py --environment dev
 ```
 
 ### Answer
 
-``` python
+```python
 import argparse
 
-parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser(
+    description="Deployment script"
+)
 
 parser.add_argument(
-    "--workers",
-    type=int,
-    default=5
+    "-e",
+    "--environment",
+    type=str,
+    help="Deployment environment"
 )
 
 args = parser.parse_args()
 
-print(f"Workers: {args.workers}")
+print(f"Deploying to {args.environment}")
 ```
 
-------------------------------------------------------------------------
+---
 
-## Practice 6 --- Multiple Values
+## Practice 5 — Use `-h`
 
-Accept:
+Take any of the above programs and run:
 
-``` bash
-python program.py repo1 repo2 repo3
+```bash
+python program.py -h
 ```
 
-Print each repository.
+Study:
 
-### Answer
+- `usage`
+- `description`
+- `positional arguments`
+- `options`
+- your `help` messages
 
-``` python
-import argparse
+---
 
-parser = argparse.ArgumentParser()
-
-parser.add_argument(
-    "repositories",
-    nargs="+"
-)
-
-args = parser.parse_args()
-
-for repo in args.repositories:
-    print(repo)
-```
-
-------------------------------------------------------------------------
-
-## Practice 7 --- Repeated Option
-
-Allow:
-
-``` bash
-python program.py \
-    --repo repo1 \
-    --repo repo2 \
-    --repo repo3
-```
-
-### Answer
-
-``` python
-import argparse
-
-parser = argparse.ArgumentParser()
-
-parser.add_argument(
-    "--repo",
-    action="append"
-)
-
-args = parser.parse_args()
-
-print(args.repo)
-```
-
-Output:
-
-``` text
-['repo1', 'repo2', 'repo3']
-```
-
-------------------------------------------------------------------------
-
-## Practice 8 --- Verbosity
-
-Make:
-
-``` bash
-python program.py
-```
-
-return:
-
-``` text
-0
-```
-
-and:
-
-``` bash
-python program.py -v -v -v
-```
-
-return:
-
-``` text
-3
-```
-
-### Answer
-
-``` python
-import argparse
-
-parser = argparse.ArgumentParser()
-
-parser.add_argument(
-    "-v",
-    "--verbose",
-    action="count",
-    default=0
-)
-
-args = parser.parse_args()
-
-print(args.verbose)
-```
-
-------------------------------------------------------------------------
-
-## Practice 9 --- Integer Validation
-
-Accept:
-
-``` bash
-python program.py --workers 10
-```
-
-but reject:
-
-``` bash
-python program.py --workers hello
-```
-
-### Answer
-
-``` python
-import argparse
-
-parser = argparse.ArgumentParser()
-
-parser.add_argument(
-    "--workers",
-    type=int,
-    required=True
-)
-
-args = parser.parse_args()
-
-print(f"Workers: {args.workers}")
-```
-
-------------------------------------------------------------------------
-
-# 31. Mini Project --- DevOps Deployment CLI
+# 26. Mini DevOps Exercise
 
 Create:
 
-``` text
+```text
 deploy.py
 ```
 
-It must accept:
+It should accept:
 
-``` text
--e / --environment
--v / --version
---dry-run
---workers
+```bash
+python deploy.py dev 1.2.3
 ```
 
-Requirements:
+Where:
 
--   `environment` must be `dev`, `qs`, or `prod`
--   `version` is required
--   `dry-run` is optional
--   `workers` defaults to `5`
--   `workers` must be an integer
-
-Run:
-
-``` bash
-python deploy.py \
-    --environment dev \
-    --version 1.2.3 \
-    --workers 10 \
-    --dry-run
+```text
+dev    → environment
+1.2.3  → version
 ```
 
 Expected:
 
-``` text
-Environment: dev
-Version: 1.2.3
-Workers: 10
-Dry run: True
+```text
+Deploying version 1.2.3 to dev
 ```
 
 ### Solution
 
-``` python
+```python
 import argparse
 
 parser = argparse.ArgumentParser(
@@ -1411,139 +1012,138 @@ parser = argparse.ArgumentParser(
 )
 
 parser.add_argument(
-    "-e",
-    "--environment",
-    choices=["dev", "qs", "prod"],
-    required=True,
+    "environment",
+    type=str,
     help="Deployment environment"
 )
 
 parser.add_argument(
-    "-v",
-    "--version",
-    required=True,
+    "version",
+    type=str,
     help="Application version"
-)
-
-parser.add_argument(
-    "--workers",
-    type=int,
-    default=5,
-    help="Number of workers"
-)
-
-parser.add_argument(
-    "--dry-run",
-    action="store_true",
-    help="Run without performing the actual deployment"
 )
 
 args = parser.parse_args()
 
-print(f"Environment: {args.environment}")
-print(f"Version: {args.version}")
-print(f"Workers: {args.workers}")
-print(f"Dry run: {args.dry_run}")
+print(
+    f"Deploying version {args.version} "
+    f"to {args.environment}"
+)
 ```
 
-------------------------------------------------------------------------
+Try:
 
-# 32. Final Mental Model
+```bash
+python deploy.py dev 1.2.3
+python deploy.py qs 2.0.0
+python deploy.py prod 3.1.5
+```
 
-``` text
-Terminal
-   │
-   │ python deploy.py --environment dev --version 1.2.3
-   ▼
+---
+
+# 27. Connection to Your DevOps Learning
+
+This basic `argparse` concept is directly relevant to the larger Python script you are studying.
+
+Your Bitbucket automation script uses:
+
+```python
+my_parser = argparse.ArgumentParser()
+```
+
+and then:
+
+```python
+my_parser.add_argument(...)
+```
+
+followed by:
+
+```python
+args = my_parser.parse_args()
+```
+
+Then it uses values such as:
+
+```python
+args.branches
+args.project
+args.secret
+args.outputFile
+```
+
+So learning this simple example gives you the foundation for understanding that larger automation script.
+
+The next concepts to connect with `argparse` are:
+
+```text
 argparse
-   │
-   ├── Parse arguments
-   ├── Validate required values
-   ├── Validate types
-   ├── Validate choices
-   ├── Apply defaults
-   └── Handle flags
-   │
-   ▼
-args object
-   │
-   ├── args.environment
-   ├── args.version
-   ├── args.workers
-   └── args.dry_run
-   │
-   ▼
-Your Python program
-```
-
-## Key things to remember
-
-``` text
-ArgumentParser()
-    → creates the parser
-
-add_argument()
-    → defines what the CLI accepts
-
-parse_args()
-    → reads the command-line input
-
-Positional argument
-    → normally required
-
---option
-    → optional argument/flag
-
-type=int
-    → converts and validates input as an integer
-
-default=
-    → value used when the argument isn't supplied
-
-required=True
-    → makes an optional option mandatory
-
-choices=
-    → restricts allowed values
-
-store_true
-    → boolean flag
-
-nargs
-    → controls number of values
-
-append
-    → repeated option creates a list
-
-count
-    → counts repeated options
-
-dest
-    → changes the Python attribute name
-```
-
-## Next learning step for DevOps Python
-
-After `argparse`, connect it with:
-
-``` text
-argparse
+   ↓
+variables
+   ↓
+strings
+   ↓
+lists
+   ↓
+dictionaries
+   ↓
+functions
    ↓
 JSON
    ↓
-Functions
-   ↓
-Lists & dictionaries
-   ↓
-Exception handling
-   ↓
-File handling
-   ↓
 requests / REST API
    ↓
-HTTP authentication
+exception handling
    ↓
-API automation
+file handling
    ↓
-Concurrency / Futures
+concurrency
 ```
+
+---
+
+# 28. Final Revision
+
+If you remember only these lines, remember:
+
+```python
+import argparse
+
+parser = argparse.ArgumentParser(
+    description="My program"
+)
+
+parser.add_argument(
+    "team",
+    type=str,
+    help="Enter team name"
+)
+
+args = parser.parse_args()
+
+team = args.team
+```
+
+Run:
+
+```bash
+python program.py arsenal
+```
+
+Think:
+
+```text
+command line
+     ↓
+"arsenal"
+     ↓
+argparse
+     ↓
+args.team
+     ↓
+team
+     ↓
+rest of Python program
+```
+
+This is the basic foundation of `argparse`.

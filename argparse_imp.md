@@ -1,6 +1,58 @@
 # Python `argparse` — Basic Command-Line Arguments
 ### video Link: https://www.youtube.com/watch?v=FbEJN8FsJ9U
 
+Don't try to memorize every `argparse` option. Use this **4-step trick**:
+
+### 🧠 Remember: **Create → Add → Parse → Use**
+
+```python
+import argparse
+
+# 1. CREATE
+parser = argparse.ArgumentParser()
+
+# 2. ADD
+parser.add_argument("team", type=str, help="Team name")
+
+# 3. PARSE
+args = parser.parse_args()
+
+# 4. USE
+team = args.team
+```
+
+That's the main pattern. **90% of the time, remember only this.**
+
+### For options, remember:
+
+```text
+"team"       → positional → required
+"--team"     → optional
+type=int     → convert to integer
+default=5    → fallback value
+required=True → must provide
+action="store_true" → True/False flag
+choices=[...] → allowed values
+```
+
+### 🧩 One-line memory trick
+
+> **CAPU = Create → Add → Parse → Use**
+
+When writing a Python CLI program, your brain should automatically go:
+
+**C → A → P → U**
+
+```python
+C: parser = argparse.ArgumentParser()
+A: parser.add_argument(...)
+P: args = parser.parse_args()
+U: args.team
+```
+
+For your DevOps work, **CAPU is enough to start**. Don't memorize the rest; look up `argparse` options when you actually need them.
+
+
 ## 1. What is `argparse`?
 
 If you have Python scripts that need some input from the user, or where you want to change a value to get a different result, `argparse` is a useful way to handle that input.
